@@ -1,4 +1,5 @@
-// Initial commit from https://gist.github.com/roblaplaca/11025c3e0cae33f3fc0b
+// from https://gist.github.com/roblaplaca/11025c3e0cae33f3fc0b
+
 /**
  * Polls for XKCD's latest post and emails it daily (only if new).
  *
@@ -8,19 +9,20 @@
 function main() {
     var RSS_URL = "http://xkcd.com/rss.xml",
         xmlDoc = getRSSFeedAsXML(RSS_URL),
-        channel = xmlDoc.getElement().getElement("channel"),
-        firstItem = channel.getElement("item"),
-        pubDateAsString = firstItem.getElement("pubDate").getText(),
+        // modified using https://www.labnol.org/code/19733-parse-xml-rss-feeds-google-scripts
+        channel = xmlDoc.getRootElement().getChild("channel"),
+        firstItem = channel.getChildren("item")[0],
+        pubDateAsString = firstItem.getChildText("pubDate"),
         body,
         subject;
 
-    if( wasComicPublishedToday(pubDateAsString) ) {
-        subject = "XKCD : " + firstItem.getElement("title").getText();
-        body = firstItem.getElement("description").getText();
+    //if( wasComicPublishedToday(pubDateAsString) ) {
+        subject = "XKCD : " + firstItem.getChildText("title");
+        body = firstItem.getChildText("description");
         body = appendAltToBody(body);
 
        sendEmailToSelf(subject, body);
-    }
+   // }
 }
 
 /**
@@ -46,7 +48,9 @@ function appendAltToBody(body) {
 function getRSSFeedAsXML(url) {
     var xmlText = UrlFetchApp.fetch(url).getContentText();
     
-    return Xml.parse(xmlText, true);
+    //return Xml.parse(xmlText, true);
+    // modified using https://www.labnol.org/code/19733-parse-xml-rss-feeds-google-scripts
+    return XmlService.parse(xmlText);
 }
 
 /**
@@ -76,5 +80,5 @@ function wasComicPublishedToday(pubDateAsString) {
         pubDate = new Date(pubDateAsString),
         differenceInDays = ((now.getTime() - pubDate.getTime()) / 1000 / 60 / 60 / 24);
 
-    return (differenceInDays &lt;= 1);
+    return (differenceInDays <= 1);
 }
