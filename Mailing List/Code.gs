@@ -7,48 +7,31 @@
  */
 
 function main() {
-    var RSS_URL = "https://diaryofasaistudent.blogspot.com/feeds/posts/default?updated-min=2022-11-26T00:00:00&alt=json",
+    var RSS_URL = "https://diaryofasaistudent.blogspot.com/feeds/posts/default?updated-min=2022-11-27T00:00:00&alt=json",
         jsonDoc = getFeedAsJson(RSS_URL),
         // modified using https://github.com/hn-88/bloggerToEbook/blob/main/Code.gs        
-        body,
+        body = '<h3>Posts updated this week</h3>\n',
         subject;
-        //titles = channel.getChildren("title");
-        //Logger.log(jsonDoc)
+        
+    body += '<p>\n';
 
     for ( i in jsonDoc.feed.entry) {
-      Logger.log(jsonDoc.feed.entry[i].title.$t);
+      //Logger.log(jsonDoc.feed.entry[i].title.$t);
       //Logger.log(jsonDoc.feed.entry[i].summary.$t);
       // using https://stackoverflow.com/questions/59251914/how-to-get-the-data-from-the-feed-of-blogspot
       // for the link
-      Logger.log(jsonDoc.feed.entry[i].link.pop().href)
-      
+      //Logger.log(jsonDoc.feed.entry[i].link.pop().href)
+      body += '<a href="' + jsonDoc.feed.entry[i].link.pop().href
+           + '" target="_blank">'
+           + jsonDoc.feed.entry[i].title.$t
+           + '</a> <br>\n';      
     }
-
+    body += '</p>\n';
     
     subject = "DiaryofaSaiStudent updates for this week";
-    //body = firstItem.getChildText("description");
-    //Logger.log(subject)
-    //Logger.log(body)
-    //Logger.log(pubDateAsString)
-    
-    //sendEmailToSelf(subject, body);
+        
+    sendEmailToSelf(subject, body);
 
-}
-
-/**
-* Retrieves RSS feed and returns it as an XML object
-* which can be traversed.
-*
-* @param {String} url - url of RSS feed to retrieve
-* @returns {XMLObject}
-*/
-
-function getRSSFeedAsXML(url) {
-    var xmlText = UrlFetchApp.fetch(url).getContentText();
-    
-    //return Xml.parse(xmlText, true);
-    // modified using https://www.labnol.org/code/19733-parse-xml-rss-feeds-google-scripts
-    return XmlService.parse(xmlText);
 }
 
 function getFeedAsJson(url) {
@@ -71,19 +54,4 @@ function sendEmailToSelf(subject, body) {
     GmailApp.sendEmail(recipient, subject, "", {
         htmlBody: body
     });
-}
-
-/**
-* Determines if publish date was more than a day ago
-*
-* @param {String} pubDateAsString - Date string of a given post
-* @returns {Boolean} whether or not the comic was published on the current day
-*/
-
-function wasComicPublishedToday(pubDateAsString) {
-    var now = new Date(),
-        pubDate = new Date(pubDateAsString),
-        differenceInDays = ((now.getTime() - pubDate.getTime()) / 1000 / 60 / 60 / 24);
-
-    return (differenceInDays <= 1);
 }
