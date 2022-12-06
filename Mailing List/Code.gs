@@ -1,40 +1,38 @@
-// from https://gist.github.com/roblaplaca/11025c3e0cae33f3fc0b
+// modified from https://gist.github.com/roblaplaca/11025c3e0cae33f3fc0b
 
 /**
- * Polls for XKCD's latest post and emails it daily (only if new).
+ * Polls for blog's posts for this week and emails it once a week.
  *
- * @frequency This task should run daily.
+ * @frequency This task should run once a week.
  */
 
 function main() {
-    var RSS_URL = "http://xkcd.com/rss.xml",
-        xmlDoc = getRSSFeedAsXML(RSS_URL),
-        // modified using https://www.labnol.org/code/19733-parse-xml-rss-feeds-google-scripts
-        channel = xmlDoc.getRootElement().getChild("channel"),
-        firstItem = channel.getChildren("item")[0],
-        pubDateAsString = firstItem.getChildText("pubDate"),
+    var RSS_URL = "https://diaryofasaistudent.blogspot.com/feeds/posts/default?updated-min=2022-11-26T00:00:00&alt=json",
+        jsonDoc = getFeedAsJson(RSS_URL),
+        // modified using https://github.com/hn-88/bloggerToEbook/blob/main/Code.gs        
         body,
         subject;
+        //titles = channel.getChildren("title");
+        //Logger.log(jsonDoc)
 
-    //if( wasComicPublishedToday(pubDateAsString) ) {
-        subject = "XKCD : " + firstItem.getChildText("title");
-        body = firstItem.getChildText("description");
-        body = appendAltToBody(body);
+    for ( i in jsonDoc.feed.entry) {
+      Logger.log(jsonDoc.feed.entry[i].title.$t);
+      //Logger.log(jsonDoc.feed.entry[i].summary.$t);
+      // using https://stackoverflow.com/questions/59251914/how-to-get-the-data-from-the-feed-of-blogspot
+      // for the link
+      Logger.log(jsonDoc.feed.entry[i].link.pop().href)
+      
+    }
 
-       sendEmailToSelf(subject, body);
-   // }
-}
+    
+    subject = "DiaryofaSaiStudent updates for this week";
+    //body = firstItem.getChildText("description");
+    //Logger.log(subject)
+    //Logger.log(body)
+    //Logger.log(pubDateAsString)
+    
+    //sendEmailToSelf(subject, body);
 
-/**
-* The alt tag contains a subtitle for the comic which is often funny
-* This method extracts the value and appends it to the email body
-*/
-
-function appendAltToBody(body) {
-    var altTagRegex = /alt="(.*)"/,
-        matches = altTagRegex.exec(body);
-  
-    return (matches.length === 0) ? body : body + "<br /><br /> " + matches[1];
 }
 
 /**
@@ -51,6 +49,13 @@ function getRSSFeedAsXML(url) {
     //return Xml.parse(xmlText, true);
     // modified using https://www.labnol.org/code/19733-parse-xml-rss-feeds-google-scripts
     return XmlService.parse(xmlText);
+}
+
+function getFeedAsJson(url) {
+    var jsonText = UrlFetchApp.fetch(url).getContentText();
+    
+    // modified using https://github.com/hn-88/bloggerToEbook/blob/main/Code.gs
+    return JSON.parse(jsonText);
 }
 
 /**
