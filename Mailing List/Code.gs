@@ -33,12 +33,13 @@ function main() {
            + '</a> <br>\n';      
     }
     body += '</p><br><br>\n'
-         +  '<p><small>You have received this email due to signing up at <a href="https://diaryofasaistudent.blogspot.com/">https://diaryofasaistudent.blogspot.com/</a>.</small></p>'
-         +  '<p><small>If you do not wish to get these emails every week, please reply to this email stating you would like to unsubscribe. </small></p>';
+         +  '<p><small>You have received this email due to signing up at <a href="https://diaryofasaistudent.blogspot.com/" target="_blank">https://diaryofasaistudent.blogspot.com/</a>.</small></p>'
+         +  '<p><small>If you do not wish to get these emails every week, please reply to this email stating you would like to unsubscribe. </small></p>'
+         +  '<p><small>The <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list/blob/main/LICENSE" target="_blank">MIT licensed</a> Source-code of this mailing list implementation is at  <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list" target="_blank">https://github.com/hn-88/Google-Apps-Script-mailing-list</a>. </small></p>';
     
     subject = "DiaryofaSaiStudent posts updated this week";
         
-    sendEmailToSelf(subject, body);
+    sendEmailToList(subject, body);
 
 }
 
@@ -106,4 +107,29 @@ function sendEmailToSelf(subject, body) {
     GmailApp.sendEmail(recipient, subject, "", {
         htmlBody: body
     });
+}
+
+/**
+* Sends an email to the list
+*
+* @param {String} subject - email subject line
+* @param {String} body - HTML markup to be used as body content for the email
+*/
+
+function sendEmailToList(subject, body) {
+
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
+    // via https://stackoverflow.com/questions/14991030/get-value-in-one-column-in-spreadsheet-using-google-apps-script
+    var Avals = sheet.getRange("A1:A").getValues();
+    var numberOfAVals = Avals.filter(String).length;
+
+    //Logger.log(numberOfAVals);
+    for (n=0;n<numberOfAVals;n++) {
+      var recipient = Avals[n];
+      //Logger.log(recipient)
+
+      GmailApp.sendEmail(recipient, subject, "", {
+          htmlBody: body
+      });
+    }
 }
