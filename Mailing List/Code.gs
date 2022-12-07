@@ -2,7 +2,7 @@
 
 // adding the mailchimp api constants as global 
 // https://mailchimp.com/developer/marketing/guides/quick-start/#make-your-first-api-call
-const mailchimpApiKey = "04a16b83270c1c37306d69ebaed3b8a3-us21";
+const mailchimpApiKey = "04thisKeyIsRevokedNowb8a3-us21";
 const mailchimpDC = "us21";
 
 
