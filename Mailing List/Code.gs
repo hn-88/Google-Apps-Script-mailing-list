@@ -13,7 +13,13 @@ const mailchimpDC = "us21";
  */
 
 function main() {
-    var RSS_URL = "https://diaryofasaistudent.blogspot.com/feeds/posts/default?updated-min=2022-12-05T00:00:00&alt=json",
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('RSS');
+    var RSSvals = sheet.getRange("A1:C1").getValues();
+     
+    // https://developers.google.com/apps-script/reference/utilities/utilities#formatDate(Date,String,String)
+    var formattedDate = Utilities.formatDate(new Date(), "GMT", "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    
+    var RSS_URL = RSSvals[0][0]+RSSvals[0][1]+RSSvals[0][2],
         jsonDoc = getFeedAsJson(RSS_URL),
         // modified using https://github.com/hn-88/bloggerToEbook/blob/main/Code.gs        
         body = '<h3>Posts updated this week</h3><h4>(May contain links to posts with minor edits also)</h4>\n',
@@ -41,6 +47,8 @@ function main() {
         
     sendEmailToList(subject, body);
 
+    sheet.getRange("B1").setValue(formattedDate);
+    
 }
 
 
