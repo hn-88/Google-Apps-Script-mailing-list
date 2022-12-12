@@ -40,9 +40,9 @@ function main() {
     }
     body += '</p><br><br>\n'
          +  '<p><small>You have received this email due to signing up at <a href="https://diaryofasaistudent.blogspot.com/" target="_blank">https://diaryofasaistudent.blogspot.com/</a>.</small></p>'
-         +  '<p><small>If you do not wish to get these emails every week, please reply to this email stating you would like to unsubscribe. </small></p>'
-         +  '<p><small>The <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list/blob/main/LICENSE" target="_blank">MIT licensed</a> Source-code of this mailing list implementation is at  <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list" target="_blank">https://github.com/hn-88/Google-Apps-Script-mailing-list</a>. </small></p>';
-    
+         +  '<p><small>The <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list/blob/main/LICENSE" target="_blank">MIT licensed</a> Source-code of this mailing list implementation is at  <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list" target="_blank">https://github.com/hn-88/Google-Apps-Script-mailing-list</a>. </small></p>'
+         +  '<p><small>If you do not wish to get these emails every week, please reply to this email stating you would like to unsubscribe, or use the link below to unsubscribe. </small></p>\n';
+             
     subject = "DiaryofaSaiStudent posts updated this week";
         
     sendEmailToList(subject, body);
@@ -129,15 +129,146 @@ function sendEmailToList(subject, body) {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
     // via https://stackoverflow.com/questions/14991030/get-value-in-one-column-in-spreadsheet-using-google-apps-script
     var Avals = sheet.getRange("A1:A").getValues();
+    var Bvals = sheet.getRange("B1:B").getValues();
+    var Cvals = sheet.getRange("C1:C").getValues();
     var numberOfAVals = Avals.filter(String).length;
 
     //Logger.log(numberOfAVals);
     for (n=0;n<numberOfAVals;n++) {
       var recipient = Avals[n];
+      var hash = Cvals[n];
       //Logger.log(recipient)
-
-      GmailApp.sendEmail(recipient, subject, "", {
-          htmlBody: body
-      });
+      // send email only if Bval is 'confirmed'
+      if(Bvals[n]=='confirmed') {
+        GmailApp.sendEmail(recipient, subject, "", {
+            htmlBody: body+addunsublink(recipient, hash)
+        });
+      }
     }
 }
+
+/**
+* Returns an unsubscribe link as HTML which can be appended to body
+*
+* @param {String} email - email id of recipient
+* @param {String} hash - unique unsubscribe hash
+*/
+function addunsublink(email, hash) {
+  
+  deploymentid = 'AKfycbxFqJgJoxaZa3oOsFJeP_Lnk6dRBVPYKo94cZTJyWaAo-di1DeWq3e4RBXEaT7iuthN';
+  linkval = 'https://script.google.com/macros/s/'
+            + deploymentid
+            +  '/exec?email='
+            + encodeURIComponent(email)
+            + '&unsubscribe_hash='
+            + hash;
+  linktext = '<p><small><a href="'
+           + linkval
+           + '">Unsubscribe</a></small></p> '
+  Logger.log(linktext);
+  return linktext;
+}
+
+function checkQuota() {
+  Logger.log(MailApp.getRemainingDailyQuota());
+}
+
+// the following are via
+// https://ravgeetdhillon.medium.com/add-unsubscribe-link-in-emails-using-google-apps-script-475c938b3e9f
+
+function getMD5Hash(value) {
+  value = value + generateRandomString(9); // added this
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5,
+                                         value,
+                                         Utilities.Charset.UTF_8);
+  let hash = '';
+  for (i = 0; i < digest.length; i++) {
+    let byte = digest[i];
+    if (byte < 0) byte += 256;
+    let bStr = byte.toString(16);
+    if (bStr.length == 1) bStr = '0' + bStr;
+    hash += bStr;
+  }
+  //Logger.log(hash)
+  return hash;
+}
+
+function generateRandomString(length) {
+  const randomNumber = Math.pow(36, length + 1) - Math.random() * Math.pow(36, length);
+  const string = Math.round(randomNumber).toString(36).slice(1);
+  return string;
+}
+
+function doGet(e) {
+  const email = e.parameter['email'];
+  const unsubscribeHash = e.parameter['unsubscribe_hash'];
+  const success = unsubscribeUser(email, unsubscribeHash);
+  if (success) return ContentService.createTextOutput().append('You have unsubscribed');
+  return ContentService.createTextOutput().append('Failed');
+}
+
+function unsubscribeUser(emailToUnsubscribe, unsubscribeHash) {  
+  // get the active sheet which contains our emails
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
+
+  // get the data in it
+  const data = sheet.getDataRange().getValues();
+  
+  /*
+  // get headers
+  const headers = data[0];
+
+  // get the index of each header
+  const emailIndex = headers.indexOf('email');
+  const unsubscribeHashIndex = headers.indexOf('unsubscribe_hash');
+  const subscribedIndex = headers.indexOf('subscribed');
+  */
+  const emailIndex = 0;
+  const unsubscribeHashIndex = 2;
+  const subscribedIndex = 1;
+  
+  // iterate through the data
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const email = row[emailIndex];
+    const hash = row[unsubscribeHashIndex];
+
+    // if the email and unsubscribe hash match with the values in the sheet
+    // then update the subscribed value to 'no'
+    if (emailToUnsubscribe === email && unsubscribeHash === hash) {
+      sheet.getRange(i+1, subscribedIndex+1).setValue('no');
+      return true;
+    }
+  }
+}
+
+function updatehashes() {  
+  // get the active sheet which contains our emails
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
+
+  // get the data in it
+  const data = sheet.getDataRange().getValues();
+  
+  /*
+  // get headers
+  const headers = data[0];
+
+  // get the index of each header
+  const emailIndex = headers.indexOf('email');
+  const unsubscribeHashIndex = headers.indexOf('unsubscribe_hash');
+  const subscribedIndex = headers.indexOf('subscribed');
+  */
+  const emailIndex = 0;
+  const unsubscribeHashIndex = 2;
+  const subscribedIndex = 1;
+  
+  // iterate through the data 
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const email = row[emailIndex];
+    const hash = getMD5Hash(email);
+    sheet.getRange(i+1, unsubscribeHashIndex+1).setValue(hash);    
+  }
+}
+
+
