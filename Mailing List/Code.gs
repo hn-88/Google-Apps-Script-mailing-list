@@ -199,13 +199,38 @@ function generateRandomString(length) {
   return string;
 }
 
+// This doGet implements unsubscribe
+
 function doGet(e) {
   const email = e.parameter['email'];
+  const s = e.parameter['s'];
+  
+  if (s=='unsub') {
   const unsubscribeHash = e.parameter['unsubscribe_hash'];
   const success = unsubscribeUser(email, unsubscribeHash);
-  if (success) return ContentService.createTextOutput().append('You have unsubscribed');
+  if (success) return ContentService.createTextOutput().append('You have unsubscribed.');
   return ContentService.createTextOutput().append('Failed');
+  }
+  
+  if (s=='sub') {
+  const returnvalue = subscribeUser(email);
+  if (returnvalue == "success") return ContentService.createTextOutput().append('You will be sent a confirmation email.');
+  
+  }
+
+  if (s=='conf') {
+  const subscribeHash = e.parameter['subscribe_hash'];
+  const returnvalue = confirmUser(email, subscribeHash);
+  if (returnvalue == "success") return ContentService.createTextOutput().append('You will start receiving regular email updates.');
+  
+  }
+  // the following will be invoked only if
+  // neither sub nor unsub was invoked
+  // or if either of them failed
+  return ContentService.createTextOutput().append('Failed');
+  
 }
+
 
 function unsubscribeUser(emailToUnsubscribe, unsubscribeHash) {  
   // get the active sheet which contains our emails
@@ -241,6 +266,85 @@ function unsubscribeUser(emailToUnsubscribe, unsubscribeHash) {
     }
   }
 }
+
+function confirmUser(emailtosub, subhash) {  
+  // get the active sheet which contains our emails
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
+
+  // get the data in it
+  const data = sheet.getDataRange().getValues();
+  
+  const emailIndex = 0;
+  const subscribeHashIndex = 2;
+  const subscribedIndex = 1;
+  
+  // iterate through the data
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const email = row[emailIndex];
+    const hash = row[subscribeHashIndex];
+
+    // if the email and hash match with the values in the sheet
+    // then update the subscribed value to 'confirmed'
+    if (emailtosub === email && subhash === hash) {
+      sheet.getRange(i+1, subscribedIndex+1).setValue('confirmed');
+      return true;
+    }
+  }
+}
+
+
+// The following function 
+// 1. checks if the email being entered for subscription already exists
+// 2. If already exists, checks if confirmed
+// 3. If doesn't exist, adds and returns success.
+// 4. Other possible return values are 
+//     confirmed, unconfirmed, unsubscribed
+function subscribeUser(emailToSubscribe) {  
+  // get the active sheet which contains our emails
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
+
+  // get the data in it
+  const data = sheet.getDataRange().getValues();
+  
+  const emailIndex = 0;
+  const unsubscribeHashIndex = 2;
+  const subscribedIndex = 1;
+  
+  // iterate through the data
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const email = row[emailIndex];
+    const issubscribed = row[subscribedIndex];
+
+    // if the email matches with the values in the sheet
+    // then update the subscribed value to 'no'
+    if (emailToSubscribe === email) {
+      if (issubscribed === 'confirmed') {
+        return issubscribed;
+      }
+      if (issubscribed === 'no') {
+        return 'unsubscribed';
+      }
+      if (issubscribed === '') {
+        return 'unconfirmed';
+      }  
+    }
+
+  }
+  // emailToSubscribe is not found, so append it
+  // add the hash and send a confirmation email
+  var subscribe_hash = getMD5Hash(emailToSubscribe);
+  var row =  [emailToSubscribe, "", subscribe_hash];
+  sheet.appendRow(row);
+  sendConfirmationEmail(emailToSubscribe,subscribe_hash);
+  return 'success';
+}
+
+function sendConfirmationEmail(emailToSubscribe,subscribe_hash) { 
+  // todo
+}
+
 
 function updatehashes() {  
   // get the active sheet which contains our emails
