@@ -43,7 +43,7 @@ function myFunction() {
       }
    ],
    "subject":"test mail using s i b api on GAS",
-   "htmlContent":"<html><head></head><body><h3>This is a test email using GAS</h3></body></html>"   
+   "htmlContent": "<html><head></head><body><h3>This is a Heading using GAS</h3><p>Here is some content.</p><a href={{ unsubscribe }}>To unsubscribe, click here</a></body></html>"   
 }`,
     'headers': {
         "accept": "application/json",
