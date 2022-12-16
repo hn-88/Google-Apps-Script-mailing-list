@@ -19,7 +19,7 @@ curl --request POST \
       }
    ],
    "subject":"test mail using s i b api",
-   "htmlContent":"<html><head></head><body><h1>Hello this is a test email from sib</h1></body></html>"   
+   "htmlContent": "<html><head></head><body><h3>This is a Heading using GAS</h3><p>Here is some content.</p><a href={{ unsubscribe }}>To unsubscribe, click here</a></body></html>"   
 }'
 
 */
