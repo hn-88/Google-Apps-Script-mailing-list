@@ -221,7 +221,7 @@ function doGet(e) {
   if (s=='conf') {
   const subscribeHash = e.parameter['subscribe_hash'];
   const returnvalue = confirmUser(email, subscribeHash);
-  if (returnvalue == "success") return ContentService.createTextOutput().append('You will start receiving regular email updates.');
+  if (returnvalue == "success") return ContentService.createTextOutput().append('Thank you for confirming. You will start receiving regular email updates on Fridays.');
   
   }
   // the following will be invoked only if
@@ -284,17 +284,20 @@ function confirmUser(emailtosub, subhash) {
     const email = row[emailIndex];
     const hash = row[subscribeHashIndex];
 
+    // todo - add check to give additional message if user had unsubscribed earlier
+    // or if there is something else wrong
+
     // if the email and hash match with the values in the sheet
     // then update the subscribed value to 'confirmed'
     if (emailtosub === email && subhash === hash) {
       sheet.getRange(i+1, subscribedIndex+1).setValue('confirmed');
-      return true;
+      return 'success';
     }
   }
 }
 
 
-// The following function 
+// The following function adds email subscribers. It 
 // 1. checks if the email being entered for subscription already exists
 // 2. If already exists, checks if confirmed
 // 3. If doesn't exist, adds and returns success.
@@ -342,7 +345,21 @@ function subscribeUser(emailToSubscribe) {
 }
 
 function sendConfirmationEmail(emailToSubscribe,subscribe_hash) { 
-  // todo
+  var subject = 'Confirmation required - weekly emails from diaryofasaistudent';
+  var sublink = 'https://script.google.com/macros/s/AKfycbxFqJgJoxaZa3oOsFJeP_Lnk6dRBVPYKo94cZTJyWaAo-di1DeWq3e4RBXEaT7iuthN/exec?email='+encodeURIComponent(emailToSubscribe)+'&s=conf&subscribe_hash='+subscribe_hash;
+  var body = '<h3>Did you sign up for updates from diaryofasaistudent?</h3>' 
+  +  '<p>You have received this confirmation email because you, (or someone else on your behalf) '
+  + 'has signed up your email for weekly updates from diaryofasaistudent.</p>\n'
+  +  '<p>If you do not wish to receive these weekly emails, you can just ignore this email. '
+  + 'But if you wish to receive the email updates, please click on the confirm button below.</p>\n'
+  + '<a href="' + sublink +'"><button type="button">I confirm - send me the emails please!</button></a>'
+         +  '</p><br><br>\n'
+         +  '<p><small>You have received this email due to signing up at <a href="https://diaryofasaistudent.blogspot.com/" target="_blank">https://diaryofasaistudent.blogspot.com/</a>.</small></p>'
+         +  '<p><small>The <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list/blob/main/LICENSE" target="_blank">MIT licensed</a> Source-code of this mailing list implementation is at  <a href="https://github.com/hn-88/Google-Apps-Script-mailing-list" target="_blank">https://github.com/hn-88/Google-Apps-Script-mailing-list</a>. </small></p>';         
+
+    GmailApp.sendEmail(emailToSubscribe, subject, "", {
+        htmlBody: body
+    });
 }
 
 
