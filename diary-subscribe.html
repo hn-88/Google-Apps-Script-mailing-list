@@ -1,0 +1,29 @@
+<html>
+  <head> 
+    <script>
+      function validateForm() {
+        let x = document.forms["hnsForm"]["fname"].value;
+        if (x == "") {
+          alert("Email must be filled out");
+          return false;
+        }
+        let x = document.forms["hnsForm"]["botname"].value;
+        if (x != "") {
+          // That means it is a bot
+          return false;
+        }
+      } 
+    </script>
+  </head>
+  
+  <body>
+    <form name="hnsForm" action="https://script.google.com/macros/s/AKfycbxFqJgJoxaZa3oOsFJeP_Lnk6dRBVPYKo94cZTJyWaAo-di1DeWq3e4RBXEaT7iuthN/exec" onsubmit="return validateForm()" method="post">
+      Email: <input type="text" name="fname">
+      <!-- real people should not fill this next field in and expect good things - do not remove this or risk form bot signups-->
+      <input type="text" name="botname" style="display: none;">
+      <input type="hidden" name="s" value="sub">
+      <input type="submit" value="Submit" formtarget="responseframe">
+    </form>
+    <iframe name="responseframe" src="/test"></iframe>
+  </body>
+</html>
