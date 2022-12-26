@@ -2,7 +2,11 @@
   <head> 
     <script>
       function validateForm() {
-        let x = document.forms["hnsForm"]["fname"].value;
+        document.getElementById("messageshow").style.display = 'block';
+        setTimeout(function() {
+          document.getElementById("messageshow").style.display = 'none';
+        }, 9000);
+        let x = document.forms["hnsForm"]["email"].value;
         if (x == "") {
           alert("Email must be filled out");
           return false;
@@ -24,6 +28,7 @@
       <input type="hidden" name="s" value="sub">
       <input type="submit" value="Submit" formtarget="responseframe">
     </form>
+    <div id="messageshow" style="display: none;" >Submitting . . . please wait for confirmation below in 10 seconds or so    </div>
     <iframe name="responseframe" scrolling="no" width="100%"></iframe>
   </body>
 </html>
