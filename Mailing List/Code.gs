@@ -1,9 +1,3 @@
-// modified from https://gist.github.com/roblaplaca/11025c3e0cae33f3fc0b
-
-// adding the mailchimp api constants as global 
-// https://mailchimp.com/developer/marketing/guides/quick-start/#make-your-first-api-call
-const mailchimpApiKey = "04thisKeyIsRevokedNowb8a3-us21";
-const mailchimpDC = "us21";
 
 
 /**
@@ -51,49 +45,6 @@ function main() {
     
 }
 
-
-function sendMCTestEmail() {
-/*  
-curl -X POST \
-  https://${dc}.api.mailchimp.com/3.0/campaigns/{campaign_id}/actions/test \
-  --user "anystring:${apikey}"' \
-  -d '{"test_emails":[],"send_type":"html"}'
-  */
-
-  var url = 'https://'+mailchimpDC+'.api.mailchimp.com/3.0/campaigns/4c2fd9cce6/actions/test';
-  // https://stackoverflow.com/questions/23546255/how-to-use-urlfetchapp-with-credentials-google-scripts
-  var options = {
-    'method'    : 'post',
-    'payload'   : '{"test_emails":["myemail@mydomain.org","myemail@gmail.com"],"send_type":"html"}',
-    'headers': {
-        "Authorization": "Basic " + Utilities.base64Encode("anystring" + ":" + mailchimpApiKey)
-    }
-  };
-
-  var responseText = UrlFetchApp.fetch(url,options).getContentText();
-  Logger.log(responseText);
-
-}
-
-function getMCListofCampaigns() {
-/*  
-curl -X GET \
-  'https://${dc}.api.mailchimp.com/3.0/campaigns?fields=<SOME_ARRAY_VALUE>&exclude_fields=<SOME_ARRAY_VALUE>&count=10&offset=0&type=<SOME_STRING_VALUE>&status=<SOME_STRING_VALUE>&before_send_time=<SOME_STRING_VALUE>&since_send_time=<SOME_STRING_VALUE>&before_create_time=<SOME_STRING_VALUE>&since_create_time=<SOME_STRING_VALUE>&list_id=<SOME_STRING_VALUE>&folder_id=<SOME_STRING_VALUE>&member_id=<SOME_STRING_VALUE>&sort_field=<SOME_STRING_VALUE>&sort_dir=<SOME_STRING_VALUE>' \
-  --user "anystring:${apikey}"'    
-  */
-
-  var url = 'https://'+mailchimpDC+'.api.mailchimp.com/3.0/campaigns?fields=campaigns.id,campaigns.create_time,campaigns.settings.title,campaigns.settings.subject_line';
-  // https://stackoverflow.com/questions/23546255/how-to-use-urlfetchapp-with-credentials-google-scripts
-  var options = {
-    'headers': {
-        "Authorization": "Basic " + Utilities.base64Encode("anystring" + ":" + mailchimpApiKey)
-    }
-  };
-
-  var responseText = UrlFetchApp.fetch(url,options).getContentText();
-  Logger.log(responseText);
-
-}
 
 function getFeedAsJson(url) {
     var jsonText = UrlFetchApp.fetch(url).getContentText();
@@ -199,6 +150,42 @@ function generateRandomString(length) {
   return string;
 }
 
+// This doPost implements user submitting emails to subscribe
+function doPost(e) {
+  const email = e.parameter['email'];
+  const s = e.parameter['s'];
+
+  Logger.log(s);
+  Logger.log(email);
+  
+  if (s=='sub') {
+  const returnvalue = subscribeUser(email);
+  if (returnvalue == "success") {
+    return HtmlService.createHtmlOutput('<p>You will be sent a confirmation email.</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  if (returnvalue == "confirmed") {
+    return HtmlService.createHtmlOutput('<p>You are already subscribed. Please check your spam folder.</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  if (returnvalue == "unconfirmed") {
+    return HtmlService.createHtmlOutput('<p>Confirmation mail was already sent to you. Please check your spam folder or contact diaryofasaistudent@gmail.com</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  if (returnvalue == "unsubscribed") {
+    return HtmlService.createHtmlOutput('<p>You had unsubscribed earlier. Please contact diaryofasaistudent@gmail.com to re-subscribe.</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  
+  //else 
+  return HtmlService.createHtmlOutput('<p>There was an error. Please contact diaryofasaistudent@gmail.com</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  
+  
+  }
+}
+
+
 // This doGet implements unsubscribe
 
 function doGet(e) {
@@ -212,12 +199,6 @@ function doGet(e) {
   return ContentService.createTextOutput().append('Failed');
   }
   
-  if (s=='sub') {
-  const returnvalue = subscribeUser(email);
-  if (returnvalue == "success") return ContentService.createTextOutput().append('You will be sent a confirmation email.');
-  
-  }
-
   if (s=='conf') {
   const subscribeHash = e.parameter['subscribe_hash'];
   const returnvalue = confirmUser(email, subscribeHash);
@@ -303,6 +284,7 @@ function confirmUser(emailtosub, subhash) {
 // 3. If doesn't exist, adds and returns success.
 // 4. Other possible return values are 
 //     confirmed, unconfirmed, unsubscribed
+
 function subscribeUser(emailToSubscribe) {  
   // get the active sheet which contains our emails
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
@@ -324,7 +306,7 @@ function subscribeUser(emailToSubscribe) {
     // then update the subscribed value to 'no'
     if (emailToSubscribe === email) {
       if (issubscribed === 'confirmed') {
-        return issubscribed;
+        return 'confirmed';
       }
       if (issubscribed === 'no') {
         return 'unsubscribed';
@@ -352,6 +334,8 @@ function sendConfirmationEmail(emailToSubscribe,subscribe_hash) {
   + 'has signed up your email for weekly updates from diaryofasaistudent.</p>\n'
   +  '<p>If you do not wish to receive these weekly emails, you can just ignore this email. '
   + 'But if you wish to receive the email updates, please click on the confirm button below.</p>\n'
+  + '<p>(Please note: this will NOT WORK if you are logged in to multiple google accounts - <br>'
+  + 'a workaround in such cases is to right-click and open the link below in an incognito window.)</p>\n'
   + '<a href="' + sublink +'"><button type="button">I confirm - send me the emails please!</button></a>'
          +  '</p><br><br>\n'
          +  '<p><small>You have received this email due to signing up at <a href="https://diaryofasaistudent.blogspot.com/" target="_blank">https://diaryofasaistudent.blogspot.com/</a>.</small></p>'
