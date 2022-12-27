@@ -160,6 +160,11 @@ function doPost(e) {
   
   if (s=='sub') {
   const returnvalue = subscribeUser(email);
+  if (returnvalue == "emailfail") {
+    return HtmlService.createHtmlOutput('<p>Please submit a valid email. Please contact diaryofasaistudent@gmail.com if the email was correct.</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   if (returnvalue == "success") {
     return HtmlService.createHtmlOutput('<p>You will be sent a confirmation email.</p>')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -186,12 +191,13 @@ function doPost(e) {
 }
 
 
-// This doGet implements unsubscribe
+// This doGet implements unsubscribe if s=='unsub'
+// If s == '', it returns the subscription form
 
 function doGet(e) {
   const email = e.parameter['email'];
   const s = e.parameter['s'];
-  
+
   if (s=='unsub') {
   const unsubscribeHash = e.parameter['unsubscribe_hash'];
   const success = unsubscribeUser(email, unsubscribeHash);
@@ -208,7 +214,12 @@ function doGet(e) {
   // the following will be invoked only if
   // neither sub nor unsub was invoked
   // or if either of them failed
-  return ContentService.createTextOutput().append('Failed');
+  
+  // return the subscription form
+  // https://developers.google.com/apps-script/guides/html/best-practices
+  return HtmlService.createTemplateFromFile('SubForm')
+      .evaluate()
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   
 }
 
@@ -277,6 +288,24 @@ function confirmUser(emailtosub, subhash) {
   }
 }
 
+function validateEmail(email) {
+  var re = /\S+@\S+\.\S+/;
+  if (!re.test(email)) {
+    return false;
+  } else {
+    // the method below returns true only if the email has a google account.
+    // var testSheet = SpreadsheetApp.openById('1HNIWfsqoqJzuwm-B8xz9xDc4YioePwU6YZJfFITk6qY');
+    // try {
+    //   testSheet.addViewer(email);
+    // } catch(e) {
+    //   return false;
+    // }
+    // testSheet.removeViewer(email);
+    return true;
+  }
+}
+
+
 
 // The following function adds email subscribers. It 
 // 1. checks if the email being entered for subscription already exists
@@ -286,6 +315,12 @@ function confirmUser(emailtosub, subhash) {
 //     confirmed, unconfirmed, unsubscribed
 
 function subscribeUser(emailToSubscribe) {  
+  // first check if email is valid
+  // https://stackoverflow.com/questions/4009085/checking-if-an-email-is-valid-in-google-apps-script
+  if (!validateEmail(emailToSubscribe)) {
+    return 'emailfail';
+  }
+
   // get the active sheet which contains our emails
   let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
 
