@@ -154,9 +154,12 @@ function generateRandomString(length) {
 function doPost(e) {
   const email = e.parameter['email'];
   const s = e.parameter['s'];
+  const bot = e.parameter['botname'];
 
-  Logger.log(s);
-  Logger.log(email);
+  if (bot != "") {
+    return HtmlService.createHtmlOutput('<p>Bot submission blocked. Please contact diaryofasaistudent at gmail dot com if the email was correct.</p>')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
   
   if (s=='sub') {
   const returnvalue = subscribeUser(email);
