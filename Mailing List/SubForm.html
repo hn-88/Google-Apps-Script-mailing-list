@@ -3,28 +3,18 @@
   <head>
     <base target="_top">
     <script>
-      function validateForm() {
+      function showmesg() {
         document.getElementById("messageshow").style.display = 'block';
         setTimeout(function() {
           document.getElementById("messageshow").style.display = 'none';
         }, 9000);
         return true;
-        // adding the following causes the script to fail
-        // let x = document.forms["hnsForm"]["email"].value;
-        // if (x == "") {
-        //   alert("Email must be filled out");
-        //   return false;
-        // }
-        // let x = document.forms["hnsForm"]["botname"].value;
-        // if (x != "") {
-        //   // That means it is a bot
-        //   return false;
-        // }
+        
       } 
     </script>
   </head>
   <body>
-    <form name="hnsForm" action="https://script.google.com/macros/s/AKfycbxFqJgJoxaZa3oOsFJeP_Lnk6dRBVPYKo94cZTJyWaAo-di1DeWq3e4RBXEaT7iuthN/exec" onsubmit="return validateForm()" method="post">
+    <form name="hnsForm" action="https://script.google.com/macros/s/AKfycbxFqJgJoxaZa3oOsFJeP_Lnk6dRBVPYKo94cZTJyWaAo-di1DeWq3e4RBXEaT7iuthN/exec" onsubmit="return showmesg()" method="post">
       Email: <input type="text" name="email">
       <!-- real people should not fill this next field in and expect good things - do not remove this or risk form bot signups-->
       <input type="text" name="botname" style="display: none;">
