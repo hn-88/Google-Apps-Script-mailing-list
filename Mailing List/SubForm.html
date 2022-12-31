@@ -7,7 +7,7 @@
         document.getElementById("messageshow").style.display = 'block';
         setTimeout(function() {
           document.getElementById("messageshow").style.display = 'none';
-        }, 9000);
+        }, 3600);
         return true;
         
       } 
@@ -18,10 +18,11 @@
       Email: <input type="text" name="email">
       <!-- real people should not fill this next field in and expect good things - do not remove this or risk form bot signups-->
       <input type="text" name="botname" style="display: none;">
-      <input type="hidden" name="s" value="sub">
-      <input type="submit" value="Submit" formtarget="responseframe">
+      <input type="hidden" name="s" value="sub"><br/>
+      <input type="submit" style="display:block; margin: 0 auto;" value="Submit" formtarget="responseframe">
     </form>
-    <div id="messageshow" style="display: none;" >Submitting . . . please wait for confirmation below in 10 seconds or so    </div>
-    <iframe name="responseframe" scrolling="no" width="100%"></iframe>
+    <div id="messageshow" style="display: none;" >Submitting ... please wait for confirmation below in a few seconds ...    </div>
+    <!-- https://www.geeksforgeeks.org/remove-border-from-iframe-using-css/ -->
+    <iframe name="responseframe" scrolling="no" width="100%" frameBorder="0"></iframe>
   </body>
 </html>
