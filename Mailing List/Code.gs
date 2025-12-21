@@ -112,7 +112,8 @@ function addunsublink(email, hash) {
             +  '/exec?email='
             + encodeURIComponent(email)
             + '&unsubscribe_hash='
-            + hash;
+            + hash
+            + '&s=unsub';
   linktext = '<p><small><a href="'
            + linkval
            + '">Unsubscribe</a></small></p> '
