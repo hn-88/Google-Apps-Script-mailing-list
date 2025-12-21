@@ -1,14 +1,16 @@
+
+
 /**
  * Polls for sent emails and emails unsent emails.
  *
  * @frequency This task should run every 5 minutes, with initial emails being sent only once an hour.
  */
 
-const contactemail = "our@email.org";
-const currentdeploymentid ='AKfyc123456782345678w';
-var subject = 'Email reminder';
-const signupwebsite = '<a href="https://our.website.org/" target="_blank">https://our.website.org/</a>';
-const sendername = 'First Second Name';
+const contactemail = "planning@sssvv.org";
+const currentdeploymentid ='AKfycbwhFry3M60sIVUs3o905qJRdwb_SjKGk3oSFozGIIx0JWKqWiBAXMkAgSNp39E5ZmCniw';
+var subject = 'SSSVV Swayam reminder';
+const signupwebsite = '<a href="https://swayam.srisathyasaividyavahini.org/" target="_blank">https://swayam.srisathyasaividyavahini.org/</a>';
+const sendername = 'Swayamplus SSSVV';
 var body = '<h3>Heading</h3><p>First paragraph</p>'
           + '</p><br><br>\n'
          +  '<p><small>You have received this email due to signing up at '+signupwebsite+'.</small></p>'
@@ -57,7 +59,7 @@ function checkAndProcessQueue() {
   let lastTimeValue = logSheet.getRange(1, 2).getValue();
   
   // Handle first run or empty values
-  if (isNaN(lastRow)) lastRow = 0;
+  if (isNaN(lastRow)) lastRow = 1; // first row of Emails sheet is headers
   
   const now = new Date();
   let lastTime = new Date(lastTimeValue);
@@ -286,7 +288,8 @@ function addunsublink(email, hash) {
             +  '/exec?email='
             + encodeURIComponent(email)
             + '&unsubscribe_hash='
-            + hash;
+            + hash
+            + '&s=unsub';
   linktext = '<p><small><a href="'
            + linkval
            + '">Unsubscribe</a></small></p> '
@@ -536,36 +539,6 @@ function subscribeUser(emailToSubscribe) {
   sheet.appendRow(row);
   sendConfirmationEmail(emailToSubscribe,subscribe_hash);
   return 'success';
-}
-
-function forceSubscribeAllUsers() {  
-  // first check if email is valid
-  // https://stackoverflow.com/questions/4009085/checking-if-an-email-is-valid-in-google-apps-script
-  //if (!validateEmail(emailToSubscribe)) {
-  //  return 'emailfail';
-  //}
-
-  // get the active sheet which contains our emails
-  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
-
-  // get the data in it
-  const data = sheet.getDataRange().getValues();
-  
-  const emailIndex = 0;
-  const unsubscribeHashIndex = 2;
-  const subscribedIndex = 1;
-  
-  // iterate through the data
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-    const email = row[emailIndex];
-    const issubscribed = row[subscribedIndex];
-  // add the hash 
-    var subscribe_hash = getMD5Hash(email.trim().toLowerCase());
-    var newrow =  [email, "confirmed", subscribe_hash];
-    
-    return 'success';
-  }
 }
 
 function confirmAndHashEmails() {
