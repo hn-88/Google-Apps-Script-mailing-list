@@ -4,6 +4,21 @@
  * Polls for sent emails and emails unsent emails.
  *
  * @frequency This task should run every 5 minutes, with initial emails being sent only once an hour.
+ * How to set up - 
+ * 1. The Google sheet which contains this script must have two sheets with the names 'lastsent' and 'Emails' as mentioned in the Configuration section below.
+ * 2. The Emails must have columns Email, confirmed / unsubscribed, hash. We need to populate the Email column with the emails we want to send.
+ * 3. Generate the hashes and confirm all emails before first send, by running confirmAndHashEmails()
+ * 4. Set up a 5 minute time-based trigger by running createTimeTrigger()
+ * With that, the list will send the first 10 emails with a delay of one hour each, and progressively reduce the delay as seen in the lines 88 onwards.
+ * Currently, the script waits one hour between emails for the first 10 emails, then waits 15 minutes between emails up to the first 100, 
+ * then waits 10 minutes between emails up to 400 emails, then sends the rest of the emails one by one every 5 minutes.
+ * So, at the max rate, 12 * 24 = 288 emails per day only.
+ *
+ * Projected finish times
+ * row 11 - 10 hours
+ * row 101 - 32.5 hours = 1 day 8.5 hours
+ * row 401 - 50 + 32.5 hours = 3 days 10.5 hours
+ * row 1865 - 82.5 + 122 hours = 204.5 hours = 8 days 12.5 hours.
  */
 
 const contactemail = "planning@sssvv.org";
