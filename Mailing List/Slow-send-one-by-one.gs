@@ -645,3 +645,37 @@ function updatehashes() {
     sheet.getRange(i+1, unsubscribeHashIndex+1).setValue(hash);    
   }
 }
+
+function sendEmailFromGmailDraft() {
+  const draftSubject = "Template - Newsletter"; // The exact subject of your template draft
+  const recipient = "recipient@example.com";
+  
+  // Fetch all drafts
+  const drafts = GmailApp.getDrafts();
+  let templateDraft = null;
+  
+  // Find the correct draft by its subject line
+  for (let i = 0; i < drafts.length; i++) {
+    if (drafts[i].getMessage().getSubject() === draftSubject) {
+      templateDraft = drafts[i];
+      break;
+    }
+  }
+  
+  if (!templateDraft) {
+    Logger.log("Draft with subject '" + draftSubject + "' not found.");
+    return;
+  }
+  
+  const message = templateDraft.getMessage();
+  const htmlBody = message.getBody(); // Extract the rich HTML body
+  const attachments = message.getAttachments(); // Extract attachments if any
+  
+  // Send the email
+  GmailApp.sendEmail(recipient, message.getSubject(), "Please view this email in an HTML-compatible client.", {
+    htmlBody: htmlBody,
+    attachments: attachments
+  });
+  
+  Logger.log("Email sent from draft template.");
+}
