@@ -676,6 +676,25 @@ function sendEmailFromGmailDraft() {
     htmlBody: htmlBody,
     attachments: attachments
   });
+
+/**
+ * Creates a custom menu in the Google Sheet when it is opened.
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Mass Mailer')
+    .addItem('Open Setup Checklist', 'showSidebar')
+    .addToUi();
+}
+
+/**
+ * Opens the sidebar UI.
+ */
+function showSidebar() {
+  const html = HtmlService.createHtmlOutputFromFile('Index')
+    .setTitle('Mass Mailer Checklist');
+  SpreadsheetApp.getUi().showSidebar(html);
+}
   
   Logger.log("Email sent from draft template.");
 }
