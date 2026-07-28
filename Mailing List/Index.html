@@ -1,0 +1,140 @@
+<html>
+  <head>
+    <base target="_top">
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Smooth transitions for checked items */
+      .step-item {
+        transition: all 0.2s ease-in-out;
+      }
+      .checked-text {
+        text-decoration: line-through;
+        color: #9ca3af; /* Gray text */
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-sans p-4">
+    <div class="max-w-md mx-auto">
+      <h2 class="text-xl font-bold mb-2 text-indigo-900 border-b pb-2">Mail Setup Checklist</h2>
+      <p class="text-xs text-gray-600 mb-6 font-medium">Please complete and check off each step before sending your campaign.</p>
+
+      <div class="space-y-4">
+        
+        <!-- Step 1 -->
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step1" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step1', 'text1')">
+          <div class="flex-1">
+            <label for="step1" id="text1" class="text-sm font-semibold block cursor-pointer select-none">1. Update the Emails table</label>
+            <a href="https://docs.google.com/spreadsheets/d/ABCDEF/edit?pli=1&gid=0#gid=0" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Sheet (Gid: 0) &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step3" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step3', 'text3')">
+          <div class="flex-1">
+            <label for="step3" id="text3" class="text-sm font-semibold block cursor-pointer select-none">2. Run function confirmAndHashEmails</label>
+            <a href="https://script.google.com/u/0/home/projects/ABCDEF/edit" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Script Editor &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step2" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step2', 'text2')">
+          <div class="flex-1">
+            <label for="step2" id="text2" class="text-sm font-semibold block cursor-pointer select-none">3. Update the MassMailTemplate draft</label>
+            <a href="https://mail.google.com/mail/u/0/#inbox/ABCDEFqSL?compose=ABCDEFQksCCCvJbq" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Gmail Draft &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step3" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step3', 'text3')">
+          <div class="flex-1">
+            <label for="step3" id="text3" class="text-sm font-semibold block cursor-pointer select-none">4. Update the Subject line</label>
+            <a href="https://script.google.com/u/0/home/projects/ABCDEFr1_tJz/edit" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Script Editor &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step4" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step4', 'text4')">
+          <div class="flex-1">
+            <label for="step4" id="text4" class="text-sm font-semibold block cursor-pointer select-none">5. Clear the previous sent logs</label>
+            <a href="https://docs.google.com/spreadsheets/d/ABCDEF/edit?pli=1&gid=85718635#gid=85718635" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Sent Logs Sheet &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step5" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step5', 'text5')">
+          <div class="flex-1">
+            <label for="step5" id="text5" class="text-sm font-semibold block cursor-pointer select-none">6. Send a test email with sendEmailToSelf</label>
+            <a href="https://script.google.com/u/0/home/projects/ABCDEFE2BLr1_tJz/edit" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Script to Run Test &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step-item p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start gap-3">
+          <input type="checkbox" id="step6" class="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="toggleStep('step6', 'text6')">
+          <div class="flex-1">
+            <label for="step6" id="text6" class="text-sm font-semibold block cursor-pointer select-none">7. Start sending with createTimeTrigger</label>
+            <a href="https://script.google.com/u/0/home/projects/ABCDEFr1_tJz/edit" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-block mt-1 underline">Open Script to Set Trigger &rarr;</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer Area -->
+      <div id="footer" class="mt-6 p-4 rounded-lg bg-gray-100 border border-gray-200 text-center">
+        <span id="status-text" class="text-sm font-semibold text-gray-500">Pending tasks...</span>
+      </div>
+    </div>
+
+    <script>
+      /**
+       * Toggles UI styling for completed tasks and updates overall status
+       */
+      function toggleStep(checkboxId, textId) {
+        const checkbox = document.getElementById(checkboxId);
+        const textElement = document.getElementById(textId);
+        
+        if (checkbox.checked) {
+          textElement.classList.add('checked-text');
+        } else {
+          textElement.classList.remove('checked-text');
+        }
+
+        checkOverallStatus();
+      }
+
+      /**
+       * Checks if all checkboxes are selected and updates the status panel
+       */
+      function checkOverallStatus() {
+        const totalSteps = 6;
+        let checkedCount = 0;
+
+        for (let i = 1; i <= totalSteps; i++) {
+          if (document.getElementById('step' + i).checked) {
+            checkedCount++;
+          }
+        }
+
+        const footer = document.getElementById('footer');
+        const statusText = document.getElementById('status-text');
+
+        if (checkedCount === totalSteps) {
+          footer.className = "mt-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-center text-emerald-800";
+          statusText.innerText = "All items checked off! Ready to send.";
+        } else {
+          footer.className = "mt-6 p-4 rounded-lg bg-gray-100 border border-gray-200 text-center text-gray-500";
+          statusText.innerText = `Pending tasks (${checkedCount}/${totalSteps} completed)...`;
+        }
+      }
+    </script>
+  </body>
+</html>
+  
