@@ -1,41 +1,109 @@
-
-
 /**
  * Polls for sent emails and emails unsent emails.
  *
  * @frequency This task should run every 5 minutes, with initial emails being sent only once an hour.
- * How to set up - 
- * 1. The Google sheet which contains this script must have two sheets with the names 'lastsent' and 'Emails' as mentioned in the Configuration section below.
- * 2. The Emails must have columns Email, confirmed / unsubscribed, hash. We need to populate the Email column with the emails we want to send.
- * 3. Generate the hashes and confirm all emails before first send, by running confirmAndHashEmails()
- * 4. Set up a 5 minute time-based trigger by running createTimeTrigger()
- * With that, the list will send the first 10 emails with a delay of one hour each, and progressively reduce the delay as seen in the lines 88 onwards.
- * Currently, the script waits one hour between emails for the first 10 emails, then waits 15 minutes between emails up to the first 100, 
- * then waits 10 minutes between emails up to 400 emails, then sends the rest of the emails one by one every 5 minutes.
- * So, at the max rate, 12 * 24 = 288 emails per day only.
- *
- * Projected finish times
- * row 11 - 10 hours
- * row 101 - 32.5 hours = 1 day 8.5 hours
- * row 401 - 50 + 32.5 hours = 3 days 10.5 hours
- * row 1865 - 82.5 + 122 hours = 204.5 hours = 8 days 12.5 hours.
  */
 
 const contactemail = "planning@sssvv.org";
 const currentdeploymentid ='AKfycbwhFry3M60sIVUs3o905qJRdwb_SjKGk3oSFozGIIx0JWKqWiBAXMkAgSNp39E5ZmCniw';
-var subject = 'SSSVV Swayam reminder';
+//var subject = 'SSSVV SWAYAM Plus reminder';
+var subject = 'Congratulations - Provisional Certificate available'
 const signupwebsite = '<a href="https://swayam.srisathyasaividyavahini.org/" target="_blank">https://swayam.srisathyasaividyavahini.org/</a>';
-const sendername = 'Swayamplus SSSVV';
-var body = '<h3>Heading</h3><p>First paragraph</p>'
-          + '</p><br><br>\n'
-         +  '<p><small>You have received this email due to signing up at '+signupwebsite+'.</small></p>'
-         +  '<p><small>If you do not wish to get these emails, please reply to this email stating you would like to unsubscribe, or use the link below to unsubscribe. </small></p>\n';
+const sendername = 'SWAYAM Plus SSSVV';
+
+var body;
+var attachments;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // CONFIGURATION
 const LOG_SHEET_NAME = 'lastsent';
 const DATA_SHEET_NAME = 'Emails'; // Name of the sheet containing email, subject, body
 const TIME_ZONE = Session.getScriptTimeZone();
+
+function updateBodyFromDraft() {
+  const draftSubject = "MassMailTemplate"; // The exact subject of your template draft
+  
+  // Fetch all drafts
+  const drafts = GmailApp.getDrafts();
+  let templateDraft = null;
+  
+  // Find the correct draft by its subject line
+  for (let i = 0; i < drafts.length; i++) {
+    if (drafts[i].getMessage().getSubject() === draftSubject) {
+      templateDraft = drafts[i];
+      break;
+    }
+  }
+  
+  if (!templateDraft) {
+    Logger.log("Draft with subject '" + draftSubject + "' not found.");
+    return;
+  }
+  
+  const message = templateDraft.getMessage();
+  body = message.getBody(); // Extract the rich HTML body
+  attachments = message.getAttachments(); // Extract attachments if any
+
+}
+
+/**
+* Sends an email to yourself
+*
+* @param {String} subject - email subject line
+* @param {String} body - HTML markup to be used as body content for the email
+*/
+
+function sendEmailToSelf() {
+    var recipient = Session.getActiveUser().getEmail();
+    updateBodyFromDraft();
+
+    GmailApp.sendEmail(recipient, subject, "", {
+        htmlBody: body,
+        attachments: attachments
+    });
+}
+
+function confirmAndHashEmails() {
+  const SHEET_NAME = 'Emails'; // Change this to your actual sheet name
+  
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  
+  // Get the last row with data
+  const lastRow = sheet.getLastRow();
+  
+  // Check if there is data (assuming row 1 is headers, so we need > 1)
+  if (lastRow < 2) {
+    Logger.log("No data found to process.");
+    return;
+  }
+  
+  // 1. READ: Get all data from Row 2 down to the last row, spanning 3 columns (A, B, C)
+  // range(startRow, startCol, numRows, numCols)
+  const range = sheet.getRange(2, 1, lastRow - 1, 3);
+  const data = range.getValues();
+  
+  // 2. PROCESS: Iterate through the data in memory
+  for (let i = 0; i < data.length; i++) {
+    const email = data[i][0]; // Column A (Index 0)
+    
+    // Only process if there is an email present
+    if (email) {
+      // Set Column B (Index 1) to "confirmed"
+      data[i][1] = "confirmed";
+      
+      // Set Column C (Index 2) to the MD5 hash
+      // We trim and lowercase the email for standard hash consistency
+      data[i][2] = getMD5Hash(email.trim().toLowerCase());
+    }
+  }
+  
+  // 3. WRITE: Update the sheet in one single operation
+  range.setValues(data);
+  Logger.log("Processed " + data.length + " rows.");
+}
+
 
 /**
  * 1. Setup the Trigger
@@ -91,7 +159,9 @@ function checkAndProcessQueue() {
   console.log(`Current Status: Last Row: ${lastRow}, Mins since last send: ${diffInMins.toFixed(2)}`);
 
   // Determine if we should send based on logic
-  let shouldSend = false;
+  // let shouldSend = false;
+  // Try sending immediately for the second run
+  let shouldSend = true;
 
   // LOGIC GATES
   if (lastRow < 10) {
@@ -115,7 +185,7 @@ function checkAndProcessQueue() {
   }
 
   // EXECUTION
-  if (shouldSend) {
+  if (shouldSend) {    
     const nextRow = lastRow + 1;
     
     // Check if data actually exists for the next row
@@ -154,7 +224,8 @@ function checkAndProcessQueue() {
     
     if (emailId) {
       // Send the email
-      sendEmailToListmember(nextRow, subject, body);
+      updateBodyFromDraft();
+      sendEmailToListmember(nextRow, subject, body, attachments);
 
       // Update the Log Sheet
       logSheet.getRange(1, 1).setValue(nextRow);
@@ -172,7 +243,7 @@ function checkAndProcessQueue() {
 /**
  * Helper function to send email
  */
-function sendEmailToListmember(emailidrow, subject, body) {
+function sendEmailToListmember(emailidrow, subject, body, attachments) {
 
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Emails');
 
@@ -185,10 +256,11 @@ function sendEmailToListmember(emailidrow, subject, body) {
   // send email only if Bval is 'confirmed'
   if(Bval=='confirmed') {
     try {
-      GmailApp.sendEmail(recipient, subject, '', {
+        GmailApp.sendEmail(recipient, subject, '', {
         to: recipient,
         subject: subject,
         htmlBody: body+addunsublink(recipient, hash),
+        attachments: attachments,
         name: sendername,
       });
     } catch (e) {
@@ -199,66 +271,6 @@ function sendEmailToListmember(emailidrow, subject, body) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-function main() {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('RSS');
-    var RSSvals = sheet.getRange("A1:C1").getValues();
-     
-    // https://developers.google.com/apps-script/reference/utilities/utilities#formatDate(Date,String,String)
-    var formattedDate = Utilities.formatDate(new Date(), "GMT", "yyyy-MM-dd'T'HH:mm:ss'Z'");
-    
-    var RSS_URL = RSSvals[0][0]+RSSvals[0][1]+RSSvals[0][2],
-        jsonDoc = getFeedAsJson(RSS_URL),
-        // modified using https://github.com/hn-88/bloggerToEbook/blob/main/Code.gs        
-        body = '<h3>Posts updated this week</h3><h4>(May contain links to posts with minor edits also)</h4>\n',
-        subject;
-        
-    body += '<p>\n';
-
-    for ( i in jsonDoc.feed.entry) {
-      //Logger.log(jsonDoc.feed.entry[i].title.$t);
-      //Logger.log(jsonDoc.feed.entry[i].summary.$t);
-      // using https://stackoverflow.com/questions/59251914/how-to-get-the-data-from-the-feed-of-blogspot
-      // for the link
-      //Logger.log(jsonDoc.feed.entry[i].link.pop().href)
-      body += '<a href="' + jsonDoc.feed.entry[i].link.pop().href
-           + '" target="_blank">'
-           + jsonDoc.feed.entry[i].title.$t
-           + '</a> <br>\n';      
-    }
-    body += '</p><br><br>\n'
-         +  '<p><small>You have received this email due to signing up at '+signupwebsite+'.</small></p>'
-         +  '<p><small>If you do not wish to get these emails, please reply to this email stating you would like to unsubscribe, or use the link below to unsubscribe. </small></p>\n';
-             
-    subject = "Updates this week";
-        
-    sendEmailToList(subject, body);
-
-    sheet.getRange("B1").setValue(formattedDate);
-    
-}
-
-
-function getFeedAsJson(url) {
-    var jsonText = UrlFetchApp.fetch(url).getContentText();
-    
-    // modified using https://github.com/hn-88/bloggerToEbook/blob/main/Code.gs
-    return JSON.parse(jsonText);
-}
-
-/**
-* Sends an email to yourself
-*
-* @param {String} subject - email subject line
-* @param {String} body - HTML markup to be used as body content for the email
-*/
-
-function sendEmailToSelf(subject, body) {
-    var recipient = Session.getActiveUser().getEmail();
-
-    GmailApp.sendEmail(recipient, subject, "", {
-        htmlBody: body
-    });
-}
 
 /**
 * Sends an email to the list
@@ -556,46 +568,6 @@ function subscribeUser(emailToSubscribe) {
   return 'success';
 }
 
-function confirmAndHashEmails() {
-  const SHEET_NAME = 'Emails'; // Change this to your actual sheet name
-  
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME);
-  
-  // Get the last row with data
-  const lastRow = sheet.getLastRow();
-  
-  // Check if there is data (assuming row 1 is headers, so we need > 1)
-  if (lastRow < 2) {
-    Logger.log("No data found to process.");
-    return;
-  }
-  
-  // 1. READ: Get all data from Row 2 down to the last row, spanning 3 columns (A, B, C)
-  // range(startRow, startCol, numRows, numCols)
-  const range = sheet.getRange(2, 1, lastRow - 1, 3);
-  const data = range.getValues();
-  
-  // 2. PROCESS: Iterate through the data in memory
-  for (let i = 0; i < data.length; i++) {
-    const email = data[i][0]; // Column A (Index 0)
-    
-    // Only process if there is an email present
-    if (email) {
-      // Set Column B (Index 1) to "confirmed"
-      data[i][1] = "confirmed";
-      
-      // Set Column C (Index 2) to the MD5 hash
-      // We trim and lowercase the email for standard hash consistency
-      data[i][2] = getMD5Hash(email.trim().toLowerCase());
-    }
-  }
-  
-  // 3. WRITE: Update the sheet in one single operation
-  range.setValues(data);
-  Logger.log("Processed " + data.length + " rows.");
-}
-
 
 function sendConfirmationEmail(emailToSubscribe,subscribe_hash) { 
   var subject = 'Confirmation required - update emails';
@@ -648,7 +620,7 @@ function updatehashes() {
 
 function sendEmailFromGmailDraft() {
   const draftSubject = "Template - Newsletter"; // The exact subject of your template draft
-  const recipient = "recipient@example.com";
+  const recipient = "hari@sssmediacentre.org";
   
   // Fetch all drafts
   const drafts = GmailApp.getDrafts();
@@ -676,6 +648,9 @@ function sendEmailFromGmailDraft() {
     htmlBody: htmlBody,
     attachments: attachments
   });
+  
+  Logger.log("Email sent from draft template.");
+}
 
 /**
  * Creates a custom menu in the Google Sheet when it is opened.
@@ -694,7 +669,4 @@ function showSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Mass Mailer Checklist');
   SpreadsheetApp.getUi().showSidebar(html);
-}
-  
-  Logger.log("Email sent from draft template.");
 }
